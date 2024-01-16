@@ -1,0 +1,17 @@
+{
+	"name": "obsidian-aws-sync",
+	"version": "1.0.0",
+	"description": "ADD DESC",
+	"main": "main.js",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"version": "node version-bump.mjs && git add manifest.json versions.json"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "",
+	"devDependencies": {
+		"obsidian": "latest"
+	}
+}
