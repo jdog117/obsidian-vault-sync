@@ -2,8 +2,7 @@ import { Plugin } from 'obsidian';
 
 export default class Sync extends Plugin {
 
-    async onLoad() {
-        // Configure resources needed by the plugin.
+    async onload() {
         console.log('loading plugin')
         const openFile = this.app.workspace.getActiveFile();
         if(openFile) {
