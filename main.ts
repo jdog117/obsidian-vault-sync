@@ -4,11 +4,9 @@ export default class Sync extends Plugin {
 
     async onload() {
         console.log('loading plugin')
-        const openFile = this.app.vault.getAbstractFileByPath;
+        const openFile = this.app.vault.getFiles();
         if(openFile) {
-            console.log(openFile.name)
-            //console.log(openFile.path)
-            //console.log(openFile.stat.mtime)
+            console.log(openFile)
         }
     }
 
