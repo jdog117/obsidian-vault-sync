@@ -1,6 +1,6 @@
 import { Plugin } from 'obsidian';
 
-export default class AWSSync extends Plugin {
+export default class Sync extends Plugin {
 
     async onLoad() {
         // Configure resources needed by the plugin.
