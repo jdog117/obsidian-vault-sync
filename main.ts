@@ -6,7 +6,7 @@ export default class Sync extends Plugin {
         console.log('loading plugin')
         const openFile = this.app.vault.getFiles();
         if(openFile) {
-            console.log(openFile)
+            //console.log(openFile)
         }
     }
 
