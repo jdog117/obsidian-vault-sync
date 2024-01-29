@@ -1,18 +1,22 @@
 import { Notice, Plugin } from 'obsidian';
-require('dotenv').config();
 
-const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-console.log(accessKeyId)
+export interface DataAdapter {
+    copy(normalizedPath: string, normalizedNewPath: string);
+    //copy(normalizedPath: "TODO.md", normalizedNewPath: "C:\\Users\\jspca\\Desktop\\");
+}
 
-export default class Sync extends Plugin {
+export default class Sync extends Plugin implements DataAdapter{
+
+    //implement copy method from DataAdapter implementation
+    copy(normalizedPath: string, normalizedNewPath: string): void {
+    }
 
     async onload() {
         console.log('loading plugin')
 
         this.addRibbonIcon("upload-cloud", "AWS Sync", () => {
             //save function here
-            const getVaultFiles = this.app.vault.getFiles();
+            const getVaultFiles = this.app.vault.getMarkdownFiles();
             this.copyFiles(getVaultFiles)
 
         })
@@ -38,10 +42,15 @@ export default class Sync extends Plugin {
 
 
       //save
-    private copyFiles(files?) {
+    private copyFiles(vaultFiles?) {
 
-        console.log(files)
+        console.log(vaultFiles[1])
+        //vaultFiles[1].copy()
+        
+        this.copy("~\TODO.md", "C:/Users/jspca/Desktop/TODO.md");
 
       }
+
       
 } //end
+
