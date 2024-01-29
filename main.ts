@@ -12,7 +12,8 @@ export default class Sync extends Plugin {
 
         this.addRibbonIcon("upload-cloud", "AWS Sync", () => {
             //save function here
-            this.copyFiles
+            const getVaultFiles = this.app.vault.getFiles();
+            this.copyFiles(getVaultFiles)
 
         })
 
@@ -37,12 +38,10 @@ export default class Sync extends Plugin {
 
 
       //save
-      copyFiles() {
-        console.log("burv")
-        const getVaultFiles = this.app.vault.getFiles();
-        if(getVaultFiles) {
-            console.log(getVaultFiles)
-        }
+    private copyFiles(files?) {
+
+        console.log(files)
 
       }
-}
+      
+} //end
