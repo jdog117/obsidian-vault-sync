@@ -1,4 +1,5 @@
 import { Notice, Plugin } from 'obsidian';
+import { BUCKET_ID, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY } from './credentials';
 import { 
     DeleteObjectCommand,
     GetObjectCommand,
@@ -15,6 +16,7 @@ export default class Sync extends Plugin {
 
     async onload() {
         console.log('loading plugin')
+        console.log(BUCKET_ID)
 
         //ICON
         this.addRibbonIcon("upload-cloud", "AWS Sync", () => {
