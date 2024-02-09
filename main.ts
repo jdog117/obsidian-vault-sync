@@ -1,5 +1,5 @@
 import { Notice, Plugin } from 'obsidian';
-import { BUCKET_ID, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY } from './credentials';
+import { BUCKET_NAME, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, REGION } from './credentials';
 import { 
     DeleteObjectCommand,
     GetObjectCommand,
@@ -15,14 +15,14 @@ import {
 export default class Sync extends Plugin {
 
     async onload() {
-        console.log('loading plugin')
-        console.log(BUCKET_ID)
+        console.log('loading plugin');
 
         //ICON
         this.addRibbonIcon("upload-cloud", "AWS Sync", () => {
-            //save function here
+            //put save function here
             const vaultFiles = this.app.vault.getMarkdownFiles();
-            this.uploadToS3(vaultFiles, "bucketname","key");
+            this.uploadToS3(vaultFiles[1], BUCKET_NAME, vaultFiles[1].name)
+            // console.log(vaultFiles[1].name);
 
         })
 
@@ -38,21 +38,20 @@ export default class Sync extends Plugin {
 
     }
 
-    //s3 upload method
-    private async uploadToS3(vaultFiles, bucketName, key) {
+    private async uploadToS3(vaultFiles, bucketName, objName) {
 
         //setup aws s3
         const s3Client = new S3Client({
-            region: 'MYREGION',
+            region: REGION,
             credentials: {
-                accessKeyId: "MYACCESSKEYID",
-                secretAccessKey: "MYSECRETACCESSKEY",
+                accessKeyId: S3_ACCESS_KEY_ID,
+                secretAccessKey: S3_SECRET_ACCESS_KEY,
             },
         });
         
         const params = {
             Bucket: bucketName,
-            Key: key,
+            Key: objName,
             Body: vaultFiles,
           };
 
@@ -69,10 +68,10 @@ export default class Sync extends Plugin {
     async onunload() {
 
         // Release any resources configured by the plugin.
-        console.log('unloading plugin')
+        console.log('unloading plugin');
 
       }
 
       
-} //end
+}
 
