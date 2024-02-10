@@ -15,14 +15,21 @@ import {
 export default class Sync extends Plugin {
 
     async onload() {
-        console.log('loading plugin');
+        console.log('loading successful');
 
-        //ICON
+        //setup s3 client
+        const s3Client = new S3Client({
+            region: REGION,
+            credentials: {
+                accessKeyId: S3_ACCESS_KEY_ID,
+                secretAccessKey: S3_SECRET_ACCESS_KEY,
+            },
+        });
+
+        //ICON button
         this.addRibbonIcon("upload-cloud", "AWS Sync", () => {
-            //put save function here
             const vaultFiles = this.app.vault.getMarkdownFiles();
-            this.uploadToS3(vaultFiles[1], BUCKET_NAME, vaultFiles[1].name)
-            // console.log(vaultFiles[1].name);
+            this.uploadToS3(vaultFiles, BUCKET_NAME, s3Client)
 
         })
 
@@ -38,30 +45,25 @@ export default class Sync extends Plugin {
 
     }
 
-    private async uploadToS3(vaultFiles, bucketName, objName) {
-
-        //setup aws s3
-        const s3Client = new S3Client({
-            region: REGION,
-            credentials: {
-                accessKeyId: S3_ACCESS_KEY_ID,
-                secretAccessKey: S3_SECRET_ACCESS_KEY,
-            },
-        });
+    private async uploadToS3(vaultFiles, bucketName, s3Client) {
         
-        const params = {
-            Bucket: bucketName,
-            Key: objName,
-            Body: vaultFiles,
-          };
-
-          try {
-            const command = new PutObjectCommand(params);
-            const response = await s3Client.send(command);
-            console.log('File uploaded successfully:', response);
-          } catch (error) {
-            console.error('Error uploading file to S3:', error);
-          }
+        for (let i = 0; vaultFiles.length ; i++) {
+            console.log(vaultFiles[i]);
+            try {
+                const command = new PutObjectCommand(
+                    {
+                        Bucket: bucketName,
+                        Key: vaultFiles[i].path,
+                        Body: vaultFiles[i]
+                    }
+                );
+                const response = await s3Client.send(command);
+                console.log('File uploaded successfully:', response);
+              } catch (error) {
+                console.error('Error uploading file to S3:', error);
+              }
+              
+        }
     }
 
 
