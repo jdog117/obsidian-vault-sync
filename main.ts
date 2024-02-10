@@ -8,8 +8,8 @@ import {
     HeadObjectCommandOutput,
     ListObjectsV2Command,
     ListObjectsV2CommandInput,
-    S3Client, 
-    PutObjectCommand 
+    S3Client,
+    PutObjectCommand
 } from '@aws-sdk/client-s3';
 
 export default class Sync extends Plugin {
@@ -26,7 +26,7 @@ export default class Sync extends Plugin {
             },
         });
 
-        //ICON button
+        //iocn button > upload
         this.addRibbonIcon("upload-cloud", "AWS Sync", () => {
             const vaultFiles = this.app.vault.getMarkdownFiles();
             this.uploadToS3(vaultFiles, BUCKET_NAME, s3Client)
@@ -47,7 +47,8 @@ export default class Sync extends Plugin {
 
     private async uploadToS3(vaultFiles, bucketName, s3Client) {
         
-        for (let i = 0; vaultFiles.length ; i++) {
+        //uploads all files in the vault to s3
+        for (let i = 0; i < vaultFiles.length; i++) {
             console.log(vaultFiles[i]);
             try {
                 const command = new PutObjectCommand(
@@ -61,8 +62,7 @@ export default class Sync extends Plugin {
                 console.log('File uploaded successfully:', response);
               } catch (error) {
                 console.error('Error uploading file to S3:', error);
-              }
-              
+            }
         }
     }
 
@@ -70,7 +70,6 @@ export default class Sync extends Plugin {
     async onunload() {
 
         // Release any resources configured by the plugin.
-        console.log('unloading plugin');
 
       }
 
