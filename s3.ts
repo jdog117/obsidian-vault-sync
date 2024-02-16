@@ -1,4 +1,3 @@
-import { BUCKET_NAME, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, REGION } from './credentials';
 import { 
     DeleteObjectCommand,
     GetObjectCommand,
@@ -49,19 +48,12 @@ export async function listS3Objects(bucketName, s3Client) {
     //   }
 }
 
-// export async function async getS3Objects(bucketName, s3Client) {
-//     const objectsList = this.listS3Objects(bucketName, s3Client);
-//     objectsList.contents.forEach((item) => {
-//         console.log(item);
-//     }
+export async function getS3Objects(bucketName, s3Client) {
+    const objectsList = await listS3Objects(bucketName, s3Client);
 
-//     const command = new GetObjectCommand({ Bucket: bucketName });
-//     try {
-//         const response = await s3Client.send(command);
-//         console.log("Number of items in the bucket:", response);
-//         return response;
-//     } catch (error) {
-//         console.error('Error downloading file from S3:', error);
-//         return null;
-//     }
-// }
+    objectsList.forEach(async (obj) => {
+        const command = new GetObjectCommand({ Bucket: bucketName, Key: obj.Key });
+        const response = await s3Client.send(command);
+        console.log('File downloaded successfully:', response.Body.toString());
+    });
+}

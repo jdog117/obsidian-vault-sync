@@ -1,7 +1,7 @@
 import { Notice, Plugin } from 'obsidian';
 import { BUCKET_NAME, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, REGION } from './credentials';
 import { S3Client } from '@aws-sdk/client-s3';
-import { listS3Objects } from './s3';
+import { listS3Objects, getS3Objects } from './s3';
 
 export default class Sync extends Plugin {
 
@@ -21,11 +21,11 @@ export default class Sync extends Plugin {
         this.addRibbonIcon("upload-cloud", "AWS Sync", () => {
             const vaultFiles = this.app.vault.getMarkdownFiles();
             //this.uploadToS3(vaultFiles, BUCKET_NAME, s3Client)
-            const s3ObjectList = listS3Objects(BUCKET_NAME, s3Client)
-            .then(s3ObjectList => {
-                console.log(s3ObjectList);
-            });
-            // console.log(s3ObjectList);
+            // const s3ObjectList = listS3Objects(BUCKET_NAME, s3Client)
+            // .then(s3ObjectList => {
+            //     console.log(s3ObjectList);
+            // });
+            getS3Objects(BUCKET_NAME, s3Client);
 
         })
 
