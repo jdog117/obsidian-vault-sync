@@ -1,3 +1,4 @@
+import { Readable } from 'stream';
 import { 
     DeleteObjectCommand,
     GetObjectCommand,
@@ -34,7 +35,7 @@ export async function listS3Objects(bucketName, s3Client) {
     try {
         const response = await s3Client.send(command);
         //console.log("Number of items in the bucket:", response.Contents[0].LastModified);
-        return response.Contents; 
+        return response.Contents;
     } catch (error) {
         console.error('Error downloading file from S3:', error);
         return null;
@@ -54,6 +55,28 @@ export async function getS3Objects(bucketName, s3Client) {
     objectsList.forEach(async (obj) => {
         const command = new GetObjectCommand({ Bucket: bucketName, Key: obj.Key });
         const response = await s3Client.send(command);
-        console.log('File downloaded successfully:', response.Body.toString());
+        const fileContent = await streamToString(response.Body);
+        console.log('File downloaded successfully:', fileContent.toString());
     });
 }
+
+async function streamToString (stream: Readable | ReadableStream | Blob | undefined): Promise<string> {
+    return await new Promise((resolve, reject) => {
+        if (stream instanceof Readable) {
+            const chunks: Uint8Array[] = [];
+            stream.on('data', (chunk) => chunks.push(chunk));
+            stream.on('error', reject);
+            stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+        }
+        if (stream instanceof ReadableStream) {
+            return await new Response(stream, {}).arrayBuffer();
+        }
+        if (stream instanceof Blob) {
+            return await stream.arrayBuffer();
+        }
+        if (stream === undefined) {
+            return Error (`Stream is undefined: ${stream}`);
+        }
+
+    });
+  }
