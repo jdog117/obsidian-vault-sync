@@ -51,32 +51,47 @@ export async function listS3Objects(bucketName, s3Client) {
 
 export async function getS3Objects(bucketName, s3Client) {
     const objectsList = await listS3Objects(bucketName, s3Client);
+    console.log('objectsList:', objectsList);
 
     objectsList.forEach(async (obj) => {
         const command = new GetObjectCommand({ Bucket: bucketName, Key: obj.Key });
         const response = await s3Client.send(command);
-        const fileContent = await streamToString(response.Body);
-        console.log('File downloaded successfully:', fileContent.toString());
+        const fileContent = await streamToString(response.Body as Readable);
+        console.log(JSON.stringify(fileContent, null, 2));
+        //console.log('File downloaded successfully:', JSON.stringify(fileContent));
     });
 }
 
 async function streamToString (stream: Readable | ReadableStream | Blob | undefined): Promise<string> {
+    //console.log('stream',stream);
     return await new Promise((resolve, reject) => {
         if (stream instanceof Readable) {
+            console.log('stream is readable');
             const chunks: Uint8Array[] = [];
             stream.on('data', (chunk) => chunks.push(chunk));
             stream.on('error', reject);
             stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+            return chunks;
         }
         if (stream instanceof ReadableStream) {
-            return await new Response(stream, {}).arrayBuffer();
+            console.log('stream is readableStream');
+            console.log('stream is readableStream');
+            const reader = stream.getReader();
+            const chunks: Uint8Array[] = [];
+            reader.read().then(function processText({ done, value }) {
+                if (done) {
+                    resolve(Buffer.concat(chunks).toString('utf-8'));
+                    return;
+                }
+                chunks.push(value);
+                return reader.read().then(processText);
+            });
         }
         if (stream instanceof Blob) {
-            return await stream.arrayBuffer();
+            return stream.arrayBuffer();
         }
         if (stream === undefined) {
-            return Error (`Stream is undefined: ${stream}`);
+            throw new Error (`Stream is undefined: ${stream}`);
         }
-
     });
   }

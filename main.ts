@@ -26,6 +26,7 @@ export default class Sync extends Plugin {
             //     console.log(s3ObjectList);
             // });
             getS3Objects(BUCKET_NAME, s3Client);
+            console.log('donloading done');
 
         })
 
