@@ -19,7 +19,6 @@ export default class Cloud extends Plugin {
         });
 
         const sync = new Sync(this.app.vault);
-        //getS3Objects(BUCKET_NAME, s3Client);
 
         //iocn button > upload
         this.addRibbonIcon("upload-cloud", "AWS Sync", () => {
@@ -35,7 +34,7 @@ export default class Cloud extends Plugin {
             // this.app.vault.adapter.write(filePath, fileContent);
             // console.log('downloading done');
 
-            sync.writeVaultFiles("test.md", "test content");
+            sync.mainSyncButton();
 
         })
 

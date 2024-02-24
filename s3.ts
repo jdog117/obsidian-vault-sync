@@ -1,5 +1,4 @@
 import { Readable } from 'stream';
-import { Plugin } from 'obsidian';
 import { 
     DeleteObjectCommand,
     GetObjectCommand,
@@ -11,7 +10,7 @@ import {
     PutObjectCommand
 } from '@aws-sdk/client-s3';
 
-
+//uploads an array of vault files (file.md) to the s3 bucket
 export async function uploadToS3(vaultFiles, bucketName, s3Client) {
     for (let i = 0; i < vaultFiles.length; i++) {
         console.log(vaultFiles[i]);
@@ -31,6 +30,7 @@ export async function uploadToS3(vaultFiles, bucketName, s3Client) {
     }
 }
 
+//returns an array of objects that each contain the name and last modified date of the s3 file
 export async function listS3Objects(bucketName, s3Client) {
 
     const command = new ListObjectsV2Command({ Bucket: bucketName });
@@ -42,6 +42,7 @@ export async function listS3Objects(bucketName, s3Client) {
         console.error('Error downloading file from S3:', error);
         return null;
     }
+    //what is returned:
     // {
     //     "Key": "my-image.jpg",
     //     "LastModified": "2020-11-20T20:18:16.000Z",
@@ -51,21 +52,23 @@ export async function listS3Objects(bucketName, s3Client) {
     //   }
 }
 
+//returns an array of objects that each contain the name and content of the s3 file
 export async function getS3Objects(bucketName, s3Client) {
+    const pulledFiles: { name: string; content: string }[] = [];
     const objectsList = await listS3Objects(bucketName, s3Client);
-    //console.log('objectsList:', objectsList);
-    return objectsList;
 
-    // objectsList.forEach(async (obj) => {
-    //     const command = new GetObjectCommand({ Bucket: bucketName, Key: obj.Key });
-    //     const response = await s3Client.send(command);
-    //     const fileContent = await streamToString(response.Body as Readable);
-    //     //console.log(JSON.stringify(fileContent, null, 2)); //DEBUGGING
-    //     //writeVaultFiles(obj.Key, fileContent);
-    // });
+    for (const obj of objectsList) {
+        const command = new GetObjectCommand({ Bucket: bucketName, Key: obj.Key });
+        const response = await s3Client.send(command);
+        const fileContent = await streamToString(response.Body as Readable);
+        pulledFiles.push({ name: obj.Key, content: fileContent});
+    }
+    //console.log('returned pulled files: ', pulledFiles);
+    return pulledFiles;
 }
 
-async function streamToString (stream: Readable | ReadableStream | Blob | undefined): Promise<string> {
+//converts s3 content stream to a string
+export async function streamToString (stream: Readable | ReadableStream | Blob | undefined): Promise<string> {
     return await new Promise((resolve, reject) => {
         if (stream instanceof Readable) {
             const chunks: Uint8Array[] = [];
