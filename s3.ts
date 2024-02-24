@@ -58,12 +58,14 @@ export async function getS3Objects(bucketName, s3Client) {
     const objectsList = await listS3Objects(bucketName, s3Client);
 
     for (const obj of objectsList) {
+        //console.log('OBJECT:', obj);
         const command = new GetObjectCommand({ Bucket: bucketName, Key: obj.Key });
         const response = await s3Client.send(command);
         const fileContent = await streamToString(response.Body);
+        //console.log('FILE CONTENT:',fileContent); FOR DEBUG
         pulledFiles.push({ name: obj.Key, content: fileContent});
     }
-    console.log('returned pulled files: ', pulledFiles);
+    //console.log('returned pulled files: ', pulledFiles);
     return pulledFiles;
 }
 
@@ -80,7 +82,6 @@ async function streamToString (stream: Readable | ReadableStream | Blob | undefi
             let result = '';
             while (true) {
                 const { done, value } = await reader.read();
-                console.log('done', done);
                 if (done) {
                     break;
                 }
