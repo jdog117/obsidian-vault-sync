@@ -13,13 +13,13 @@ import {
 //uploads an array of vault files (file.md) to the s3 bucket
 export async function uploadToS3(vaultFiles, bucketName, s3Client) {
     for (let i = 0; i < vaultFiles.length; i++) {
-        console.log(vaultFiles[i]);
+        console.log('EEE',vaultFiles[i].content);
         try {
             const command = new PutObjectCommand(
                 {
                     Bucket: bucketName,
                     Key: vaultFiles[i].path,
-                    Body: vaultFiles[i]
+                    Body: vaultFiles[i].content
                 }
             );
             const response = await s3Client.send(command);
@@ -60,33 +60,33 @@ export async function getS3Objects(bucketName, s3Client) {
     for (const obj of objectsList) {
         const command = new GetObjectCommand({ Bucket: bucketName, Key: obj.Key });
         const response = await s3Client.send(command);
-        const fileContent = await streamToString(response.Body as Readable);
+        const fileContent = await streamToString(response.Body);
         pulledFiles.push({ name: obj.Key, content: fileContent});
     }
-    //console.log('returned pulled files: ', pulledFiles);
+    console.log('returned pulled files: ', pulledFiles);
     return pulledFiles;
 }
 
 //converts s3 content stream to a string
-export async function streamToString (stream: Readable | ReadableStream | Blob | undefined): Promise<string> {
-    return await new Promise((resolve, reject) => {
+async function streamToString (stream: Readable | ReadableStream | Blob | undefined): Promise<string> {
+    return await new Promise(async (resolve, reject) => {
         if (stream instanceof Readable) {
             const chunks: Uint8Array[] = [];
             stream.on('data', (chunk) => chunks.push(chunk));
             stream.on('error', reject);
             stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
         } else if (stream instanceof ReadableStream) {
-            console.log('stream is readableStream');
             const reader = stream.getReader();
-            const chunks: Uint8Array[] = [];
-            reader.read().then(function processText({ done, value }) {
+            let result = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                console.log('done', done);
                 if (done) {
-                    resolve(Buffer.concat(chunks).toString('utf-8'));
-                    return;
+                    break;
                 }
-                chunks.push(value);
-                return reader.read().then(processText);
-            });
+                result += new TextDecoder("utf-8").decode(value);
+            }
+            resolve(result);
         } else if (stream instanceof Blob) {
             const reader = new FileReader();
             reader.onloadend = function() {
