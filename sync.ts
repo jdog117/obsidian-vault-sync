@@ -40,9 +40,12 @@ export class Sync {
     }
 
     async mainSyncButton () {
-        const vaultFiles = this.vault.getMarkdownFiles();
-        //await this.uploadeee(vaultFiles);
         await this.writeVaultFiles();
+    }
+
+    async saveToCloud () {
+        const vaultFiles = this.vault.getMarkdownFiles();
+        await this.uploadeee(vaultFiles);
     }
 
 }

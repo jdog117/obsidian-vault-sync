@@ -8,21 +8,24 @@ export default class Cloud extends Plugin {
 
         const sync = new Sync(this.app.vault);
 
-        //iocn button > upload
+        //download
         this.addRibbonIcon("upload-cloud", "AWS Sync", () => {
 
             sync.mainSyncButton();
 
         })
 
-        //COMMAND
+        //upload
         this.addCommand({
+
             id:"save",
-            name: "Save to cloud",
-            callback: () => {
-                new Notice("Working!");
+            name: "Save vault to cloud",
+            callback: async () => {
+                await sync.saveToCloud();
+                new Notice("Uploaded");
 
             }
+
         })
 
     }

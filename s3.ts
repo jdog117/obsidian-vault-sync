@@ -13,7 +13,7 @@ import {
 //uploads an array of vault files (file.md) to the s3 bucket
 export async function uploadToS3(vaultFiles, bucketName, s3Client) {
     for (let i = 0; i < vaultFiles.length; i++) {
-        console.log('EEE',vaultFiles[i].content);
+        console.log('uploaded',vaultFiles[i].content);
         try {
             const command = new PutObjectCommand(
                 {
@@ -32,11 +32,10 @@ export async function uploadToS3(vaultFiles, bucketName, s3Client) {
 
 //returns an array of objects that each contain the name and last modified date of the s3 file
 export async function listS3Objects(bucketName, s3Client) {
-
     const command = new ListObjectsV2Command({ Bucket: bucketName });
     try {
         const response = await s3Client.send(command);
-        //console.log("Number of items in the bucket:", response.Contents[0].LastModified);
+        //console.log("LIST last modified", response.Contents[1].LastModified); //debug
         return response.Contents;
     } catch (error) {
         console.error('Error downloading file from S3:', error);
@@ -52,6 +51,7 @@ export async function listS3Objects(bucketName, s3Client) {
     //   }
 }
 
+//ADD ERROR HANDLING
 //returns an array of objects that each contain the name and content of the s3 file
 export async function getS3Objects(bucketName, s3Client) {
     const pulledFiles: { name: string; content: string }[] = [];
@@ -60,12 +60,12 @@ export async function getS3Objects(bucketName, s3Client) {
     for (const obj of objectsList) {
         //console.log('OBJECT:', obj);
         const command = new GetObjectCommand({ Bucket: bucketName, Key: obj.Key });
+        console.log('List ETag:', obj.ETag); //debug
         const response = await s3Client.send(command);
+        console.log('Get ETag:', response); //debug
         const fileContent = await streamToString(response.Body);
-        //console.log('FILE CONTENT:',fileContent); FOR DEBUG
         pulledFiles.push({ name: obj.Key, content: fileContent});
     }
-    //console.log('returned pulled files: ', pulledFiles);
     return pulledFiles;
 }
 
