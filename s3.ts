@@ -1,5 +1,5 @@
-import { Readable } from 'stream';
-import { 
+import { Readable } from "stream";
+import {
     DeleteObjectCommand,
     GetObjectCommand,
     HeadBucketCommand,
@@ -7,25 +7,23 @@ import {
     HeadObjectCommandOutput,
     ListObjectsV2Command,
     ListObjectsV2CommandInput,
-    PutObjectCommand
-} from '@aws-sdk/client-s3';
+    PutObjectCommand,
+} from "@aws-sdk/client-s3";
 
 //uploads an array of vault files (file.md) to the s3 bucket
 export async function uploadToS3(vaultFiles, bucketName, s3Client) {
     for (let i = 0; i < vaultFiles.length; i++) {
-        console.log('uploaded',vaultFiles[i].content);
+        console.log("uploaded", vaultFiles[i].content);
         try {
-            const command = new PutObjectCommand(
-                {
-                    Bucket: bucketName,
-                    Key: vaultFiles[i].path,
-                    Body: vaultFiles[i].content
-                }
-            );
+            const command = new PutObjectCommand({
+                Bucket: bucketName,
+                Key: vaultFiles[i].path,
+                Body: vaultFiles[i].content,
+            });
             const response = await s3Client.send(command);
-            console.log('File uploaded successfully:', response);
-          } catch (error) {
-            console.error('Error uploading file to S3:', error);
+            console.log("File uploaded successfully:", response);
+        } catch (error) {
+            console.error("Error uploading file to S3:", error);
         }
     }
 }
@@ -38,7 +36,7 @@ export async function listS3Objects(bucketName, s3Client) {
         //console.log("LIST last modified", response.Contents[1].LastModified); //debug
         return response.Contents;
     } catch (error) {
-        console.error('Error downloading file from S3:', error);
+        console.error("Error downloading file from S3:", error);
         return null;
     }
     //what is returned:
@@ -59,27 +57,34 @@ export async function getS3Objects(bucketName, s3Client) {
 
     for (const obj of objectsList) {
         //console.log('OBJECT:', obj);
-        const command = new GetObjectCommand({ Bucket: bucketName, Key: obj.Key });
-        console.log('List ETag:', obj.ETag); //debug
+        const command = new GetObjectCommand({
+            Bucket: bucketName,
+            Key: obj.Key,
+        });
+        console.log("List ETag:", obj.ETag); //debug
         const response = await s3Client.send(command);
-        console.log('Get ETag:', response); //debug
+        console.log("Get ETag:", response); //debug
         const fileContent = await streamToString(response.Body);
-        pulledFiles.push({ name: obj.Key, content: fileContent});
+        pulledFiles.push({ name: obj.Key, content: fileContent });
     }
     return pulledFiles;
 }
 
 //converts s3 content stream to a string
-async function streamToString (stream: Readable | ReadableStream | Blob | undefined): Promise<string> {
+async function streamToString(
+    stream: Readable | ReadableStream | Blob | undefined
+): Promise<string> {
     return await new Promise(async (resolve, reject) => {
         if (stream instanceof Readable) {
             const chunks: Uint8Array[] = [];
-            stream.on('data', (chunk) => chunks.push(chunk));
-            stream.on('error', reject);
-            stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+            stream.on("data", (chunk) => chunks.push(chunk));
+            stream.on("error", reject);
+            stream.on("end", () =>
+                resolve(Buffer.concat(chunks).toString("utf-8"))
+            );
         } else if (stream instanceof ReadableStream) {
             const reader = stream.getReader();
-            let result = '';
+            let result = "";
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) {
@@ -90,13 +95,13 @@ async function streamToString (stream: Readable | ReadableStream | Blob | undefi
             resolve(result);
         } else if (stream instanceof Blob) {
             const reader = new FileReader();
-            reader.onloadend = function() {
+            reader.onloadend = function () {
                 resolve(reader.result as string);
-            }
+            };
             reader.onerror = reject;
             reader.readAsText(stream);
         } else if (stream === undefined) {
-            throw new Error (`Stream is undefined: ${stream}`);
+            throw new Error(`Stream is undefined: ${stream}`);
         }
     });
 }
