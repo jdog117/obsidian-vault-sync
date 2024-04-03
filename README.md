@@ -1,6 +1,7 @@
-<p align="center" style="height: 100px;">
-<img src="img/icon.png" alt="Banner">
-<p align="center"> **Obsidian vault cloud storage and sync**</p>
+<p align="center">
+<img src="img/icon.png" alt="Banner" height="120px">
+</p>
+<p align="center"><strong>Obsidian vault cloud storage and sync</strong></p>
 </p>
 
 <p>
