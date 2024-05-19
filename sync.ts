@@ -26,10 +26,10 @@ interface IVault {
 
 interface IStorageClient {
     getObjects: (bucketName: string) => Promise<any>;
-    upload: (filesWithContent: any, bucketName: string) => void;
+    upload: (filesWithContent: any, bucketName: string) => Promise<void>;
 }
 
-// adapter for vault interface
+// added adapaters for sdk dependencies
 class VaultAdapter implements IVault {
     adapter: {
         write: (name: string, content: any) => Promise<void>;
@@ -45,10 +45,9 @@ class VaultAdapter implements IVault {
     }
 }
 
-// adapter for storage interface
 class S3ClientAdapter implements IStorageClient {
     getObjects: (bucketName: string) => Promise<any>;
-    upload: (filesWithContent: any, bucketName: string) => void;
+    upload: (filesWithContent: any, bucketName: string) => Promise<void>;
 
     constructor(private s3Client: S3Client) {
         this.getObjects = (bucketName: string) =>

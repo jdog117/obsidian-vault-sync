@@ -13,7 +13,7 @@ import {
 //uploads an array of vault files (file.md) to the s3 bucket
 export async function uploadToS3(vaultFiles, bucketName, s3Client) {
     for (let i = 0; i < vaultFiles.length; i++) {
-        console.log("EEE", vaultFiles[i].content);
+        // console.log("EEE", vaultFiles[i].content);
         try {
             const command = new PutObjectCommand({
                 Bucket: bucketName,
