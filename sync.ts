@@ -16,77 +16,37 @@ const s3Client = new S3Client({
     },
 });
 
-interface IVault {
-    write: (name: string, content: any) => Promise<void>;
-    read: (path: string) => Promise<any>;
-}
-
-interface IStorageClient {
-    getObjects: (bucketName: string) => Promise<any>;
-    upload: (filesWithContent: any, bucketName: string) => Promise<void>;
-}
-
-// added adapaters for sdk dependencies
-class VaultAdapter implements IVault {
-    constructor(private vault: Vault) {}
-
-    write(name: string, content: any): Promise<void> {
-        return this.vault.adapter.write(name, content);
-    }
-
-    read(path: string): Promise<any> {
-        return this.vault.adapter.read(path);
-    }
-}
-
-class S3ClientAdapter implements IStorageClient {
-    getObjects: (bucketName: string) => Promise<any>;
-    upload: (filesWithContent: any, bucketName: string) => Promise<void>;
-
-    constructor(private s3Client: S3Client) {
-        this.getObjects = (bucketName: string) =>
-            getS3Objects(bucketName, s3Client);
-        this.upload = (filesWithContent: any, bucketName: string) =>
-            uploadToS3(filesWithContent, bucketName, s3Client);
-    }
-}
-
 export class Sync {
-    vault: IVault;
-    storageClient: IStorageClient;
+    vault: Vault;
 
-    constructor(vault: IVault, storageClient: IStorageClient) {
+    constructor(vault: Vault) {
         this.vault = vault;
-        this.storageClient = storageClient;
     }
 
+    // writes all files from s3 to the vault
     async writeVaultFiles() {
-        const pulledFiles = await this.storageClient.getObjects(BUCKET_NAME);
+        const pulledFiles = await getS3Objects(BUCKET_NAME, s3Client);
         console.log(pulledFiles);
         for (const obj of pulledFiles) {
-            await this.vault.write(obj.name, obj.content);
+            await this.vault.adapter.write(obj.name, obj.content);
         }
     }
 
-    async uploadVault(vaultFiles) {
+    async uploadValut(vaultFiles) {
         Promise.all(
             vaultFiles.map(async (file) => {
-                const content = await this.vault.read(file.path);
+                const content = await this.vault.adapter.read(file.path);
                 console.log("content", content);
                 return { path: file.path, content };
             })
         ).then((filesWithContent) => {
-            this.storageClient.upload(filesWithContent, BUCKET_NAME);
+            uploadToS3(filesWithContent, BUCKET_NAME, s3Client);
         });
     }
 
     async mainSyncButton() {
-        // create save logic, only use upload or wite once at a time for now
         const vaultFiles = this.vault.getMarkdownFiles();
-        await this.uploadVault(vaultFiles);
+        //await this.uploadeee(vaultFiles);
         await this.writeVaultFiles();
     }
 }
-
-const vault = new VaultAdapter(new Vault());
-const storageClient = new S3ClientAdapter(s3Client);

@@ -10,7 +10,7 @@ import {
     PutObjectCommand,
 } from "@aws-sdk/client-s3";
 
-//uploads an array of vault files (file.md) to the s3 bucket
+// uploads an array of vault files (file.md) to the s3 bucket
 export async function uploadToS3(vaultFiles, bucketName, s3Client) {
     for (let i = 0; i < vaultFiles.length; i++) {
         // console.log("EEE", vaultFiles[i].content);
@@ -21,14 +21,14 @@ export async function uploadToS3(vaultFiles, bucketName, s3Client) {
                 Body: vaultFiles[i].content,
             });
             const response = await s3Client.send(command);
-            console.log("File uploaded successfully:", response);
+            // console.log("File uploaded successfully:", response);
         } catch (error) {
-            console.error("Error uploading file to S3:", error);
+            // console.error("Error uploading file to S3:", error);
         }
     }
 }
 
-//returns an array of objects that each contain the name and last modified date of the s3 file
+// returns an array of objects that each contain the name and last modified date of the s3 file
 export async function listS3Objects(bucketName, s3Client) {
     const command = new ListObjectsV2Command({ Bucket: bucketName });
     try {
@@ -39,7 +39,7 @@ export async function listS3Objects(bucketName, s3Client) {
         console.error("Error downloading file from S3:", error);
         return null;
     }
-    //what is returned:
+    // what is returned:
     // {
     //     "Key": "my-image.jpg",
     //     "LastModified": "2020-11-20T20:18:16.000Z",

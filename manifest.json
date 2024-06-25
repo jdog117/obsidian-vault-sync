@@ -1,11 +1,11 @@
 {
-	"id": "aws-sync",
-	"name": "AWS s3 Sync",
-	"version": "1.0.0",
-	"minAppVersion": "0.0.0",
-	"description": "Syncs between devices using s3 and lambda",
-	"author": "jdog117",
-	"authorUrl": "https://github.com/jdog117",
-	"fundingUrl": "",
-	"isDesktopOnly": false
+    "id": "vault-sync",
+    "name": "Vault Sync",
+    "version": "1.0.0",
+    "minAppVersion": "0.0.0",
+    "description": "Syncs your vault using the cloud",
+    "author": "jdog117",
+    "authorUrl": "https://github.com/jdog117",
+    "fundingUrl": "",
+    "isDesktopOnly": false
 }

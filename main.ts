@@ -3,17 +3,13 @@ import { Sync } from "./sync";
 
 export default class Cloud extends Plugin {
     async onload() {
-        console.log("loading successful");
+        const sync = new Sync(this.app.vault);
 
-        const vaultAdapterInstance = new VaultAdapter(this.app.vault);
-        const sync = new Sync(vaultAdapterInstance /* storageClientInstance */);
-
-        //iocn button > upload
-        this.addRibbonIcon("upload-cloud", "AWS Sync", () => {
+        // iocn button > upload
+        this.addRibbonIcon("upload-cloud", "Vault Sync", () => {
             sync.mainSyncButton();
         });
 
-        //COMMAND
         this.addCommand({
             id: "save",
             name: "Save to cloud",
