@@ -8,7 +8,6 @@ import {
     REGION,
 } from "./credentials";
 
-//setup s3 client
 const s3Client = new S3Client({
     region: REGION,
     credentials: {
@@ -18,10 +17,8 @@ const s3Client = new S3Client({
 });
 
 interface IVault {
-    adapter: {
-        write: (name: string, content: any) => Promise<void>;
-        read: (path: string) => Promise<any>;
-    };
+    write: (name: string, content: any) => Promise<void>;
+    read: (path: string) => Promise<any>;
 }
 
 interface IStorageClient {
@@ -31,17 +28,14 @@ interface IStorageClient {
 
 // added adapaters for sdk dependencies
 class VaultAdapter implements IVault {
-    adapter: {
-        write: (name: string, content: any) => Promise<void>;
-        read: (path: string) => Promise<any>;
-    };
+    constructor(private vault: Vault) {}
 
-    constructor(private vault: Vault) {
-        this.adapter = {
-            write: (name: string, content: any) =>
-                vault.adapter.write(name, content),
-            read: (path: string) => vault.adapter.read(path),
-        };
+    write(name: string, content: any): Promise<void> {
+        return this.vault.adapter.write(name, content);
+    }
+
+    read(path: string): Promise<any> {
+        return this.vault.adapter.read(path);
     }
 }
 
@@ -70,14 +64,14 @@ export class Sync {
         const pulledFiles = await this.storageClient.getObjects(BUCKET_NAME);
         console.log(pulledFiles);
         for (const obj of pulledFiles) {
-            await this.vault.adapter.write(obj.name, obj.content);
+            await this.vault.write(obj.name, obj.content);
         }
     }
 
     async uploadVault(vaultFiles) {
         Promise.all(
             vaultFiles.map(async (file) => {
-                const content = await this.vault.adapter.read(file.path);
+                const content = await this.vault.read(file.path);
                 console.log("content", content);
                 return { path: file.path, content };
             })
@@ -86,8 +80,9 @@ export class Sync {
         });
     }
 
-    async mainSyncButton(vaultFiles) {
+    async mainSyncButton() {
         // create save logic, only use upload or wite once at a time for now
+        const vaultFiles = this.vault.getMarkdownFiles();
         await this.uploadVault(vaultFiles);
         await this.writeVaultFiles();
     }
@@ -95,5 +90,3 @@ export class Sync {
 
 const vault = new VaultAdapter(new Vault());
 const storageClient = new S3ClientAdapter(s3Client);
-
-const sync = new Sync(vault, storageClient);
