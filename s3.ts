@@ -11,9 +11,11 @@ import {
 } from "@aws-sdk/client-s3";
 
 // uploads an array of vault files (file.md) to the s3 bucket
-export async function uploadToS3(vaultFiles, bucketName, s3Client) {
+export async function uploadToS3(vaultFiles, bucketName, s3Client): Promise<boolean> {
+    let uploadStatus = true;
+
     for (let i = 0; i < vaultFiles.length; i++) {
-        // console.log("EEE", vaultFiles[i].content);
+        // console.log("VAULT FILE:", vaultFiles[i].content);
         try {
             const command = new PutObjectCommand({
                 Bucket: bucketName,
@@ -21,11 +23,14 @@ export async function uploadToS3(vaultFiles, bucketName, s3Client) {
                 Body: vaultFiles[i].content,
             });
             const response = await s3Client.send(command);
-            // console.log("File uploaded successfully:", response);
+            console.log("File uploaded successfully:", response);
         } catch (error) {
-            // console.error("Error uploading file to S3:", error);
+            console.error("Error uploading file to S3:", error);
+            uploadStatus = false;
         }
     }
+
+    return uploadStatus;
 }
 
 // returns an array of objects that each contain the name and last modified date of the s3 file

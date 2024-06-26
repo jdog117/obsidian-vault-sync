@@ -1,4 +1,4 @@
-import { Vault } from "obsidian";
+import { Notice, Vault } from "obsidian";
 import { getS3Objects, uploadToS3 } from "./s3";
 import { S3Client } from "@aws-sdk/client-s3";
 import {
@@ -24,29 +24,59 @@ export class Sync {
     }
 
     // writes all files from s3 to the vault
-    async writeVaultFiles() {
-        const pulledFiles = await getS3Objects(BUCKET_NAME, s3Client);
-        console.log(pulledFiles);
+    async downloadVault() {
+        let pulledFiles;
+
+        // s3 dowload
+        try {
+            pulledFiles = await getS3Objects(BUCKET_NAME, s3Client);
+            console.log(pulledFiles); // for dev
+        } catch (error) {
+            console.error("Error during downloadVault: ", error);
+        }
+
+        let writeSuccess = true;
+        // write vault files
         for (const obj of pulledFiles) {
-            await this.vault.adapter.write(obj.name, obj.content);
+            try {
+                await this.vault.adapter.write(obj.name, obj.content);
+            } catch (error) {
+                console.error(`Error writing file ${obj.name} to the vault: `, error);
+                new Notice(`Error writing vault files, check console for more info`);
+                writeSuccess = false;
+            }
+        }
+        if (writeSuccess = true) {
+            new Notice("Successfully synced vault")
         }
     }
 
-    async uploadValut(vaultFiles) {
-        Promise.all(
-            vaultFiles.map(async (file) => {
-                const content = await this.vault.adapter.read(file.path);
-                console.log("content", content);
-                return { path: file.path, content };
-            })
-        ).then((filesWithContent) => {
-            uploadToS3(filesWithContent, BUCKET_NAME, s3Client);
-        });
+    async uploadVault(vaultFiles) {
+        try {
+            const filesWithContent = await Promise.all(
+                vaultFiles.map(async (file) => {
+                    const content = await this.vault.adapter.read(file.path);
+                    console.log("content", content);
+                    return { path: file.path, content };
+                })
+            );
+    
+            const response = await uploadToS3(filesWithContent, BUCKET_NAME, s3Client);
+            if (response === false) {
+                new Notice("Error uploading vault files, check console for more info");
+            } else {
+                new Notice("Vault successfully uploaded");
+            }
+        } catch (error) {
+            console.error("Error during uploadVault: ", error);
+        }
     }
 
-    async mainSyncButton() {
+    async SyncUp() {
         const vaultFiles = this.vault.getMarkdownFiles();
-        //await this.uploadeee(vaultFiles);
-        await this.writeVaultFiles();
+        await this.uploadVault(vaultFiles);
+    }
+    async SyncDown() {
+        await this.downloadVault();
     }
 }

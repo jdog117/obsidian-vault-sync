@@ -7,14 +7,22 @@ export default class Cloud extends Plugin {
 
         // iocn button > upload
         this.addRibbonIcon("upload-cloud", "Vault Sync", () => {
-            sync.mainSyncButton();
+            sync.SyncUp();
         });
 
         this.addCommand({
-            id: "save",
+            id: "Save",
             name: "Save to cloud",
             callback: () => {
-                new Notice("Working!");
+                sync.SyncUp();
+            },
+        });
+
+        this.addCommand({
+            id: "Sync",
+            name: "Download vault from cloud",
+            callback: () => {
+                sync.SyncDown();
             },
         });
     }
