@@ -1,4 +1,5 @@
 import { Readable } from "stream";
+import { Notice } from "obsidian";
 import {
     DeleteObjectCommand,
     GetObjectCommand,
@@ -13,14 +14,12 @@ import {
 // uploads an array of vault files (file.md) to the s3 bucket
 export async function uploadToS3(vaultFiles, bucketName, s3Client): Promise<boolean> {
     let uploadStatus = true;
-
-    for (let i = 0; i < vaultFiles.length; i++) {
-        // console.log("VAULT FILE:", vaultFiles[i].content);
+    for (const file of vaultFiles) {
         try {
             const command = new PutObjectCommand({
                 Bucket: bucketName,
-                Key: vaultFiles[i].path,
-                Body: vaultFiles[i].content,
+                Key: file.path,
+                Body: file.content,
             });
             const response = await s3Client.send(command);
             console.log("File uploaded successfully:", response);
@@ -29,7 +28,6 @@ export async function uploadToS3(vaultFiles, bucketName, s3Client): Promise<bool
             uploadStatus = false;
         }
     }
-
     return uploadStatus;
 }
 
@@ -41,8 +39,8 @@ export async function listS3Objects(bucketName, s3Client) {
         //console.log("Number of items in the bucket:", response.Contents[0].LastModified);
         return response.Contents;
     } catch (error) {
-        console.error("Error downloading file from S3:", error);
-        return null;
+        console.error("Error downloading file from S3: ", error);
+        new Notice("Error downloading vault files, check console for more info");
     }
     // what is returned:
     // {

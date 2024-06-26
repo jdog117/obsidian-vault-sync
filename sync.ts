@@ -7,6 +7,7 @@ import {
     S3_SECRET_ACCESS_KEY,
     REGION,
 } from "./credentials";
+import { validateHeaderName } from "http";
 
 const s3Client = new S3Client({
     region: REGION,
@@ -23,8 +24,7 @@ export class Sync {
         this.vault = vault;
     }
 
-    // writes all files from s3 to the vault
-    async downloadVault() {
+    private async downloadVault() {
         let pulledFiles;
 
         // s3 dowload
@@ -35,8 +35,8 @@ export class Sync {
             console.error("Error during downloadVault: ", error);
         }
 
-        let writeSuccess = true;
         // write vault files
+        let writeSuccess = true;
         for (const obj of pulledFiles) {
             try {
                 await this.vault.adapter.write(obj.name, obj.content);
@@ -51,12 +51,12 @@ export class Sync {
         }
     }
 
-    async uploadVault(vaultFiles) {
+    private async uploadVault(vaultFiles) {
+        console.log(vaultFiles[1].name)
         try {
             const filesWithContent = await Promise.all(
                 vaultFiles.map(async (file) => {
                     const content = await this.vault.adapter.read(file.path);
-                    console.log("content", content);
                     return { path: file.path, content };
                 })
             );
@@ -72,11 +72,12 @@ export class Sync {
         }
     }
 
-    async SyncUp() {
+    async pushVault() {
         const vaultFiles = this.vault.getMarkdownFiles();
         await this.uploadVault(vaultFiles);
     }
-    async SyncDown() {
+
+    async pullVault() {
         await this.downloadVault();
     }
 }

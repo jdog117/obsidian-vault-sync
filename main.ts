@@ -1,4 +1,4 @@
-import { Notice, Plugin } from "obsidian";
+import { Plugin } from "obsidian";
 import { Sync } from "./sync";
 
 export default class Cloud extends Plugin {
@@ -7,14 +7,14 @@ export default class Cloud extends Plugin {
 
         // iocn button > upload
         this.addRibbonIcon("upload-cloud", "Vault Sync", () => {
-            sync.SyncUp();
+            sync.pushVault();
         });
 
         this.addCommand({
             id: "Save",
-            name: "Save to cloud",
+            name: "Save vault to cloud",
             callback: () => {
-                sync.SyncUp();
+                sync.pullVault();
             },
         });
 
@@ -22,7 +22,7 @@ export default class Cloud extends Plugin {
             id: "Sync",
             name: "Download vault from cloud",
             callback: () => {
-                sync.SyncDown();
+                sync.pullVault();
             },
         });
     }
