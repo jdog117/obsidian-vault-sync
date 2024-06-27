@@ -1,7 +1,7 @@
 import { Readable } from "stream";
 import { Notice } from "obsidian";
 import {
-    DeleteObjectCommand,
+    DeleteObjectsCommand,
     GetObjectCommand,
     HeadBucketCommand,
     HeadObjectCommand,
@@ -106,4 +106,28 @@ async function streamToString(
             throw new Error(`Stream is undefined: ${stream}`);
         }
     });
+}
+
+export async function deleteS3Objects(bucketName, objectsToDelete, S3Client) {
+    if (objectsToDelete.length > 0) {
+        const deleteParams = {
+            Bucket: bucketName,
+            Delete: {
+                Objects: objectsToDelete,
+                Quiet: false
+            }
+        };
+
+        try {
+            await S3Client.send(new DeleteObjectsCommand(deleteParams));
+            return true;
+        } catch (error) {
+            console.error("Error during deleteS3Objects: ", error);
+            console.log(objectsToDelete.length)
+            return false;
+        }
+    } else {
+        // console.log("No objects to delete");
+        return true;
+    }
 }

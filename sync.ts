@@ -1,5 +1,5 @@
 import { Notice, Vault } from "obsidian";
-import { getS3Objects, uploadToS3 } from "./s3";
+import { getS3Objects, uploadToS3, deleteS3Objects } from "./s3";
 import { S3Client } from "@aws-sdk/client-s3";
 import {
     BUCKET_NAME,
@@ -52,7 +52,7 @@ export class Sync {
     }
 
     private async uploadVault(vaultFiles) {
-        console.log(vaultFiles[1].name)
+        // console.log(vaultFiles[1].name)
         try {
             const filesWithContent = await Promise.all(
                 vaultFiles.map(async (file) => {
@@ -72,9 +72,28 @@ export class Sync {
         }
     }
 
+    // removes any files in s3 that arent in the current vault
+    private async deleteOldVaultFilesS3(vaultFiles) {
+        try {
+            const s3Objects = await getS3Objects(BUCKET_NAME, s3Client);
+
+            const vaultFilePaths = vaultFiles.map(file => file.path);
+            const filteredObjects = s3Objects.filter(obj => !vaultFilePaths.includes(obj.name));
+            const objectsToDelete = filteredObjects.map(obj => ({ Key: obj.name }));
+
+            const deleteSuccess = await deleteS3Objects(BUCKET_NAME, objectsToDelete, s3Client);
+            if (!deleteSuccess) {
+                new Notice("Error syncing vault, see console for more info");
+            }
+        } catch (error) {
+            console.error("Error during deleteExtraS3Objects: ", error);
+        }
+    }
+
     async pushVault() {
         const vaultFiles = this.vault.getMarkdownFiles();
         await this.uploadVault(vaultFiles);
+        await this.deleteOldVaultFilesS3(vaultFiles);
     }
 
     async pullVault() {
