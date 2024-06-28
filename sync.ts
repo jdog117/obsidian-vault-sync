@@ -1,5 +1,5 @@
 import { Notice, Vault } from "obsidian";
-import { getS3Objects, uploadToS3, deleteS3Objects } from "./s3";
+import { getS3Objects, uploadToS3, deleteS3Objects, listS3Objects } from "./s3";
 import { S3Client } from "@aws-sdk/client-s3";
 import {
     BUCKET_NAME,
@@ -7,7 +7,7 @@ import {
     S3_SECRET_ACCESS_KEY,
     REGION,
 } from "./credentials";
-import { validateHeaderName } from "http";
+import { v4 as uuidv4 } from 'uuid';
 
 const s3Client = new S3Client({
     region: REGION,
@@ -18,10 +18,40 @@ const s3Client = new S3Client({
 });
 
 export class Sync {
-    vault: Vault;
+    private vault: Vault;
+    private syncCheckFileName = "lastSyncedBy.json";
+    private deviceId = uuidv4();
 
     constructor(vault: Vault) {
         this.vault = vault;
+    }
+
+    private async updateDeviceId() {
+        const syncCheckFile = [{ path: this.syncCheckFileName, content: this.deviceId }];
+        await uploadToS3(syncCheckFile, BUCKET_NAME, s3Client);
+    }
+
+    // checks if another device has synced to the cloud
+    public async checkForCollision(){
+        const s3Objects = await getS3Objects(BUCKET_NAME, s3Client);
+        const syncedByFile = s3Objects.find(obj => obj.name === this.syncCheckFileName);
+        
+        let localDeviceId: string | null = localStorage.getItem(this.syncCheckFileName);
+
+        if (localDeviceId != null) {
+            this.deviceId = localDeviceId;
+        } else {
+            localStorage.setItem(this.syncCheckFileName, this.deviceId);
+        }
+        if (syncedByFile?.name === this.syncCheckFileName) { // if file exists
+            if (syncedByFile.content != this.deviceId) { // then see if id's match
+                new Notice("Warning, your vault is out of sync. Download vault to avoid losing data")
+            } else {
+                new Notice("Vault is up to date with cloud")
+            }
+        } else {
+            new Notice("Vault needs to be uploaded")
+        }
     }
 
     private async downloadVault() {
@@ -30,7 +60,7 @@ export class Sync {
         // s3 dowload
         try {
             pulledFiles = await getS3Objects(BUCKET_NAME, s3Client);
-            console.log(pulledFiles); // for dev
+            // console.log(pulledFiles); // for dev
         } catch (error) {
             console.error("Error during downloadVault: ", error);
         }
@@ -47,12 +77,12 @@ export class Sync {
             }
         }
         if (writeSuccess = true) {
-            new Notice("Successfully synced vault")
+            new Notice("Successfully synced vault");
+            this.updateDeviceId();
         }
     }
 
     private async uploadVault(vaultFiles) {
-        // console.log(vaultFiles[1].name)
         try {
             const filesWithContent = await Promise.all(
                 vaultFiles.map(async (file) => {
@@ -70,6 +100,8 @@ export class Sync {
         } catch (error) {
             console.error("Error during uploadVault: ", error);
         }
+
+        this.updateDeviceId();
     }
 
     // removes any files in s3 that arent in the current vault
@@ -78,7 +110,7 @@ export class Sync {
             const s3Objects = await getS3Objects(BUCKET_NAME, s3Client);
 
             const vaultFilePaths = vaultFiles.map(file => file.path);
-            const filteredObjects = s3Objects.filter(obj => !vaultFilePaths.includes(obj.name));
+            const filteredObjects = s3Objects.filter(obj => !vaultFilePaths.includes(obj.name) && obj.name !== this.syncCheckFileName);
             const objectsToDelete = filteredObjects.map(obj => ({ Key: obj.name }));
 
             const deleteSuccess = await deleteS3Objects(BUCKET_NAME, objectsToDelete, s3Client);
@@ -90,13 +122,13 @@ export class Sync {
         }
     }
 
-    async pushVault() {
+    public async pushVault() {
         const vaultFiles = this.vault.getMarkdownFiles();
         await this.uploadVault(vaultFiles);
         await this.deleteOldVaultFilesS3(vaultFiles);
     }
 
-    async pullVault() {
+    public async pullVault() {
         await this.downloadVault();
     }
 }

@@ -4,6 +4,7 @@ import { Sync } from "./sync";
 export default class Cloud extends Plugin {
     async onload() {
         const sync = new Sync(this.app.vault);
+        sync.checkForCollision()
 
         // iocn button > upload
         this.addRibbonIcon("upload-cloud", "Vault Sync", () => {
@@ -23,6 +24,14 @@ export default class Cloud extends Plugin {
             name: "Download vault from cloud",
             callback: () => {
                 sync.pullVault();
+            },
+        });
+
+        this.addCommand({
+            id: "Check",
+            name: "Check if vault is up to date",
+            callback: () => {
+                sync.checkForCollision();
             },
         });
     }
